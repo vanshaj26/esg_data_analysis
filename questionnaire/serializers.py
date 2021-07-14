@@ -138,6 +138,8 @@ class question_serializer(serializers.ModelSerializer):
         fields = [
             'id',
             "question",
+            "description",
+            "unit",
             'category',
             'created_on',
             'updated_on'

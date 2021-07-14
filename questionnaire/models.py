@@ -31,6 +31,8 @@ class category(models.Model):
 class question_model(models.Model):
 
     question = models.TextField()
+    description = models.TextField(null=True, blank=True)
+    unit = models.CharField(max_length=100, null=True, blank=True)
     category = models.ForeignKey(category, related_name='cate' , on_delete=models.CASCADE, null=True, blank=True)
     created_on = models.DateTimeField(default=now)
     updated_on = models.DateTimeField(default=now)
