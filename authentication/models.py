@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
 from organisation.models import Tenant
 import os
 from django.utils import timezone
+from language.models import language
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -87,6 +88,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     # email_verified = models.BooleanField(default=False)
     tenant = models.ForeignKey(Tenant, related_name='tenant_1' ,on_delete=models.CASCADE, null=True, blank=True)
+    language = models.ForeignKey(language, related_name='user_lang' ,on_delete=models.CASCADE, null=True, blank=True)
     f_login = models.BooleanField(default=True)
     created_on = models.DateTimeField(default=timezone.now)
     updated_on = models.DateTimeField(default=timezone.now)

@@ -7,12 +7,13 @@ from authentication import models
 
 
 class UserAdmin(BaseUserAdmin):
-    ordering = ['created_on','f_name']
+    ordering = ['created_on','f_name','language']
     list_display = [
         'email',
         'f_name',
         'l_name',
         'tenant',
+        'language',
         'user_type'
         
     ]
@@ -28,7 +29,8 @@ class UserAdmin(BaseUserAdmin):
                     'f_name',
                     'l_name',
                     'tenant',
-                    'user_type'
+                    'user_type',
+                    'language'
                 )
             }
         ),

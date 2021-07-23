@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'organisation',
     'documents',
     'questionnaire',
+    'language',
+    'stakeholder',
 
 
     'corsheaders',

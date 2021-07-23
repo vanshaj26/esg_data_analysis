@@ -19,7 +19,7 @@ from esg_data_analysis.settings import DEFAULT_FROM_EMAIL, EMAIL_HOST_USER
 from django.template import loader
 # from Candidate.models import personal_detail
 from django.shortcuts import get_object_or_404
-
+from django.utils import timezone
 
 
 # import 
@@ -178,7 +178,7 @@ class Login(APIView):
 
         user_mod = get_user_model()
         user_obj = user_mod.objects.get(email=user)
-        user_obj.last_login = datetime.now()
+        user_obj.last_login = timezone.now
         user_obj.save()
         user_det = {}
         token, _ = Token.objects.get_or_create(user=user)

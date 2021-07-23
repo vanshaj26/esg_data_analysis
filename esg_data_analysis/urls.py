@@ -25,6 +25,7 @@ urlpatterns = [
     path('docs/',include("documents.urls")),
     path('org/',include("organisation.urls")),
     path('frame/',include("questionnaire.urls")),
+    path('lang/',include("language.urls")),
     # path('hr/', include("Interviewer.urls")),
     # path('candidate/', include("Candidate.urls")),
 ] + static (settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # image related
