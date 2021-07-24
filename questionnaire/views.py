@@ -83,7 +83,7 @@ class cates_mapping_list_view (mixins.RetrieveModelMixin,   # show framework and
 
 
 
-class fetch_complete_paper(mixins.ListModelMixin,      # ?frame=hello&cat=hello2&sub_cat=20
+class fetch_complete_paper(mixins.ListModelMixin,      # ?frame=1&cat=3&sub_cat=5
                     viewsets.GenericViewSet):
 
     serializer_class = cates_serializer
