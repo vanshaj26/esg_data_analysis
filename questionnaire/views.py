@@ -1,9 +1,9 @@
 from rest_framework import generics, views
-from .serializers import cates_serializer, question_serializer, cates_mapp_serializer, ques_map_serializer, related_question # framework_serializer, category_serializer, question_serializer, sub_category_serializer, mappling_Serializer
+from .serializers import cates_serializer, question_serializer, cates_mapp_serializer, ques_map_serializer, related_question, stack_question_serializer # framework_serializer, category_serializer, question_serializer, sub_category_serializer, mappling_Serializer
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response 
 from rest_framework import serializers, status, mixins, viewsets
-from .models import cates, question_model, cates_mapping, ques_cat_mapping   # framework, category, , sub_category, ques_cat_mapping
+from .models import cates, question_model, cates_mapping, ques_cat_mapping, stack_ques   # framework, category, , sub_category, ques_cat_mapping
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime
 from django.shortcuts import get_object_or_404
@@ -47,6 +47,10 @@ class fetch_sub_category (mixins.ListModelMixin,   # list all sub category
     serializer_class = cates_serializer
     queryset = cates.objects.filter(type='sub_category')
 
+
+class stack_question (viewsets.ModelViewSet):
+    serializer_class = stack_question_serializer
+    queryset = stack_ques.objects.all()
 
 class cates_mapping_list_view (mixins.RetrieveModelMixin,   # show framework and corrosponding sub category
                                 mixins.ListModelMixin,
@@ -158,8 +162,6 @@ class fetch_complete_paper(mixins.ListModelMixin,      # ?frame=hello&cat=hello2
 
 
 
-
-
 class map_existing_ques(mixins.CreateModelMixin,   # map existing question to sub category    # ?frame=hello&cat=hello2&sub_cat=20
                     viewsets.GenericViewSet):
 
@@ -170,14 +172,95 @@ class map_existing_ques(mixins.CreateModelMixin,   # map existing question to su
         frame=request.GET.get('frame')
         cat=request.GET.get('cat')
         sub_cat=request.GET.get('sub_cat')
+        frame_id = cates.objects.get(id=frame)
+        category_id = cates.objects.get(id=cat)
+        sub_category_id = cates.objects.get(id=sub_cat)
+        print(frame_id)
+        print(category_id)
+        print(sub_category_id)
 
-        mapp_id = cates_mapping.objects.filter(framework=frame).filter(category=cat).filter(sub_category=sub_cat)
+        mapp_id = cates_mapping.objects.filter(framework=frame_id).filter(category=category_id).filter(sub_category=sub_category_id)
+        print("mapp_id")
+        print(mapp_id)
         if len(mapp_id)!=0:
+            print(mapp_id)
             return mapp_id[0]
         else:
-            mapp_id = cates_mapping.objects.create(framework=frame,
-                                                    category=cat,
-                                                    sub_category=sub_cat)
+
+            mapp_id = cates_mapping.objects.create(framework=frame_id,
+                                                    category=category_id,
+                                                    sub_category=sub_category_id,
+                                                    language=frame_id.language)
+            print("else")
+            print(mapp_id)
+            return mapp_id
+
+
+
+    def create(self, request, *args, **kwargs):
+        frame = cat = sub_cat = None
+        frame=request.GET.get('frame')
+        cat=request.GET.get('cat')
+        sub_cat=request.GET.get('sub_cat')
+        print(frame)
+        print(cat)
+        print(sub_cat)
+        if (frame == None or cat == None or sub_cat == None):
+            return Response ({"Invalid Input"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+        mapp = self.find_map(request)
+        print(request.data)
+        print(mapp)
+        ques_id = question_model.objects.filter(id=request.data['ques_map'])
+        print(ques_id)
+        check_exist = ques_cat_mapping.objects.filter(ques_map=ques_id[0]).filter(cate=mapp).filter(language=ques_id[0].language)
+        if (len(check_exist)!=0):
+            return Response({"Question already exist in sub category"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        mapping = ques_cat_mapping.objects.create(ques_map=ques_id[0], cate=mapp, language=ques_id[0].language)
+        print(mapping)
+        return Response({"Ok"}, status=status.HTTP_201_CREATED)
+
+
+
+
+
+
+
+
+class map_new_ques(mixins.CreateModelMixin,   # map existing question to sub category    # ?frame=hello&cat=hello2&sub_cat=20
+                    viewsets.GenericViewSet):
+
+    serializer_class = question_serializer
+    queryset = question_model.objects.all()
+
+
+
+    def find_map(slef, request):
+        frame=request.GET.get('frame')
+        cat=request.GET.get('cat')
+        sub_cat=request.GET.get('sub_cat')
+        frame_id = cates.objects.get(id=frame)
+        category_id = cates.objects.get(id=cat)
+        sub_category_id = cates.objects.get(id=sub_cat)
+        print(frame_id)
+        print(category_id)
+        print(sub_category_id)
+
+        mapp_id = cates_mapping.objects.filter(framework=frame_id).filter(category=category_id).filter(sub_category=sub_category_id)
+        print("mapp_id")
+        print(mapp_id)
+        if len(mapp_id)!=0:
+            print(mapp_id)
+            return mapp_id[0]
+        else:
+
+            mapp_id = cates_mapping.objects.create(framework=frame_id,
+                                                    category=category_id,
+                                                    sub_category=sub_category_id,
+                                                    language=frame_id.language)
+            print("else")
+            print(mapp_id)
             return mapp_id
 
 
@@ -191,26 +274,63 @@ class map_existing_ques(mixins.CreateModelMixin,   # map existing question to su
         print(cat)
         print(sub_cat)
 
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=False)
+
+        print(serializer.data)
+
+        check_exist = question_model.objects.filter(question__iexact=serializer.data['question']).filter(language=serializer.data['language'])
+        if (len(check_exist) != 0):
+            ques_id = check_exist[0]
+        else:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            ques_id = serializer.save()
+        print(ques_id)
         
-        print(request.data)
 
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        mapp = self.find_map(request)
 
 
+        check_exist = ques_cat_mapping.objects.filter(ques_map=ques_id).filter(cate=mapp).filter(language=ques_id.language)
+        if (len(check_exist)!=0):
+            return Response({"Question already exist in sub category"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        mapping = ques_cat_mapping.objects.create(ques_map=ques_id, cate=mapp, language=ques_id.language)
+        print(mapping)
+        return Response({"Ok"}, status=status.HTTP_201_CREATED)
 
 
-        # print(queryset)
-        # page = self.paginate_queryset(queryset)
-        # if page is not None:
-        #     serializer = self.get_serializer(page, many=True)
-        #     return self.get_paginated_response(serializer.data)
 
-        # serializer = self.get_serializer(queryset, many=True)
-        # return Response(serializer.data)
+
+
+
+
+        # if (frame == None or cat == None or sub_cat == None):
+        #     return Response ({"Invalid Input"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+        # mapp = self.find_map(request)
+        # print(request.data)
+        # print(mapp)
+        # ques_id = question_model.objects.filter(id=request.data['ques_map'])
+        # print(ques_id)
+        # check_exist = ques_cat_mapping.objects.filter(ques_map=ques_id[0]).filter(cate=mapp).filter(language=ques_id[0].language)
+        # if (len(check_exist)!=0):
+        #     return Response({"Question already exist in sub category"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        # mapping = ques_cat_mapping.objects.create(ques_map=ques_id[0], cate=mapp, language=ques_id[0].language)
+        # print(mapping)
+        # return Response({"Ok"}, status=status.HTTP_201_CREATED)
+
+
+
+
+
+
+
+
+
+
+
 
 
 

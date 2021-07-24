@@ -93,6 +93,27 @@ class ques_cat_mapping(models.Model):
 
 
 
+class stack_ques(models.Model):
+
+    type_choice = [
+
+        ('boolean','boolean'),
+        ('scale','scale'),
+
+    ]
+
+
+    question = models.TextField()
+    type = models.CharField(max_length=7 ,choices=type_choice, default = 'boolean' )
+    cate = models.ForeignKey(cates_mapping, related_name='stack_category' , on_delete=models.CASCADE) 
+    language = models.ForeignKey(language, related_name='stack_ques_lang', on_delete=models.CASCADE)
+    created_on = models.DateTimeField(default=now)
+    updated_on = models.DateTimeField(default=now)
+
+    def __str__(self):
+        return str(self.id)
+
+
 
 
 

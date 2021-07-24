@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
-from .models import cates, question_model, cates_mapping, ques_cat_mapping   # framework, category, question_model, sub_category, ques_cat_mapping
+from .models import cates, question_model, cates_mapping, ques_cat_mapping, stack_ques   # framework, category, question_model, sub_category, ques_cat_mapping
 import re 
 from django.utils import timezone
 
@@ -320,6 +320,90 @@ class related_question(serializers.ModelSerializer):   # show related question v
             'id',
             'ques_map',
             ]
+
+
+
+
+
+
+
+class stack_question_serializer(serializers.ModelSerializer): # question model serializer
+
+    class Meta:
+
+        model = stack_ques
+
+        fields = [
+            'id',
+            'question',
+            'cate',
+            'type',
+            'language',
+            'created_on',
+            'updated_on'
+            ]
+
+        read_only_fields = [
+            'created_on',
+            'updated_on'
+        ]
+
+        
+    def create(self, validated_data):
+
+        ques = validated_data['question']
+        ques = re.sub(' +', ' ',ques)
+        cate = validated_data['cate']
+        type = validated_data['type']
+        lang = validated_data['language']
+        print(lang)
+        ques_1 = stack_ques.objects.filter(question__iexact=ques).filter(cate=cate).filter(language=lang)
+        if len(ques_1) == 0:
+            validated_data['question'] = ques
+            print("okk")
+            return stack_ques.objects.create(**validated_data)
+        else:
+             raise serializers.ValidationError("Question name exist and Must Be unique")
+
+
+    def update(self, instance, validated_data):
+        ques = validated_data['question']
+        ques = re.sub(' +', ' ',ques)
+        cate = validated_data['cate']
+        type = validated_data['type']
+        lang = validated_data['language']
+        ques_1 = stack_ques.objects.filter(question__iexact=ques).filter(cate=cate).filter(language=lang)
+        print(ques_1)
+
+        if len(ques_1) == 0 :
+            print("0")
+            instance.question = ques
+            instance.type = validated_data['type']
+            instance.cate = validated_data['cate']
+            instance.updated_on = timezone.now()
+            instance.language = validated_data['language']
+            instance.save()
+            return instance
+
+        elif len(ques_1) == 1 :
+            if ques_1[0].id == instance.id:
+                instance.question = ques
+                instance.type = validated_data['type']
+                instance.cate = validated_data['cate']
+                instance.updated_on = timezone.now()
+                instance.language = validated_data['language']
+                instance.save()
+                return instance
+
+            else:
+                raise serializers.ValidationError("Question name exist and Must Be unique")
+
+
+
+
+
+
+
 
 
 # class framework_serializer(serializers.ModelSerializer):

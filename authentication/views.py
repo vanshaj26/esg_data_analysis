@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import serializers, status, mixins, viewsets
 
 from rest_framework.permissions import IsAuthenticated
-from datetime import datetime
+# from datetime import datetime
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
@@ -20,7 +20,7 @@ from django.template import loader
 # from Candidate.models import personal_detail
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-
+# from datetime import datetime
 
 # import 
 
@@ -178,7 +178,9 @@ class Login(APIView):
 
         user_mod = get_user_model()
         user_obj = user_mod.objects.get(email=user)
-        user_obj.last_login = timezone.now
+        print("okkkkkkkkkkk")
+        print(str(timezone.now()))
+        user_obj.last_login = timezone.now()
         user_obj.save()
         user_det = {}
         token, _ = Token.objects.get_or_create(user=user)
@@ -189,7 +191,7 @@ class Login(APIView):
         user_det['tenant'] = str(user_obj.tenant)
         user_det['f_login'] = user_obj.f_login
         user_det['user_type'] = user_obj.user_type
-        
+        print("okkkkkkk2222222")
         return Response(user_det,
                         status=status.HTTP_200_OK)
 
