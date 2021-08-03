@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import cates_view, question_view, cates_mapping_view, ques_cate_map_view, cates_mapping_list_view, fetch_framework, fetch_category, fetch_sub_category, fetch_complete_paper, map_existing_ques, map_new_ques, stack_question  #framework_view, category_view, sub_category_view, question_view, specific_category, category_wise_view, maping_view
+from .views import cates_view, question_view, cates_mapping_view, ques_cate_map_view, cates_mapping_list_view, fetch_framework, fetch_category, fetch_sub_category, fetch_complete_paper, map_existing_ques, map_new_ques, stack_question, Excel_upload_question  #framework_view, category_view, sub_category_view, question_view, specific_category, category_wise_view, maping_view
 
 
 router = DefaultRouter()
@@ -15,6 +15,7 @@ router.register(r'fetch_paper', fetch_complete_paper), # fetch depandent cat, su
 router.register(r'map_ques', map_existing_ques),
 router.register(r'map_new_ques', map_new_ques),
 router.register(r'stack_ques', stack_question),
+router.register(r'upload_question', Excel_upload_question),
 
 
 urlpatterns = [

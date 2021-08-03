@@ -22,7 +22,7 @@ class cates(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     type = models.CharField(max_length=12 ,choices=type_choice, default = 'category' )
-    language = models.ForeignKey(language, related_name='lang_cate', on_delete=models.CASCADE)
+    language = models.ForeignKey(language, related_name='lang_cate', on_delete=models.CASCADE, null=True)
     created_on = models.DateTimeField(default=now)
     updated_on = models.DateTimeField(default=now)
 
@@ -54,7 +54,7 @@ class cates_mapping(models.Model):
     framework = models.ForeignKey(cates, related_name='frame1' , on_delete=models.CASCADE) # 1 GRI  2 GRI 3 Sasb
     category = models.ForeignKey(cates, related_name='catego1' , on_delete=models.CASCADE) # social Social Envi
     sub_category = models.ForeignKey(cates, related_name='sub_cate1' , on_delete=models.CASCADE) # subcat 1 Subcate-2 Subcat 1
-    language = models.ForeignKey(language, related_name='lang_map1' ,on_delete=models.CASCADE)
+    language = models.ForeignKey(language, related_name='lang_map1' ,on_delete=models.CASCADE, null=True)
     created_on = models.DateTimeField(default=now)
     updated_on = models.DateTimeField(default=now)
 
@@ -68,7 +68,7 @@ class question_model(models.Model):
     question = models.TextField(unique=True) # 1 what is your name
     description = models.TextField(null=True, blank=True)
     unit = models.CharField(max_length=100, null=True, blank=True)
-    language = models.ForeignKey(language, related_name='lang_ques' ,on_delete=models.CASCADE)
+    language = models.ForeignKey(language, related_name='lang_ques' ,on_delete=models.CASCADE, null=True)
     created_on = models.DateTimeField(default=now)
     updated_on = models.DateTimeField(default=now)
 
@@ -83,7 +83,7 @@ class ques_cat_mapping(models.Model):
 
     ques_map =  models.ForeignKey(question_model, related_name='mapped_ques' , on_delete=models.CASCADE) # 1    3
     cate = models.ForeignKey(cates_mapping, related_name='sub_cate' , on_delete=models.CASCADE) #          1    1
-    language = models.ForeignKey(language, related_name='lang_map' ,on_delete=models.CASCADE)
+    language = models.ForeignKey(language, related_name='lang_map' ,on_delete=models.CASCADE, null=True)
     created_on = models.DateTimeField(default=now)
     updated_on = models.DateTimeField(default=now)
 
@@ -106,7 +106,7 @@ class stack_ques(models.Model):
     question = models.TextField()
     type = models.CharField(max_length=7 ,choices=type_choice, default = 'boolean' )
     cate = models.ForeignKey(cates_mapping, related_name='stack_category' , on_delete=models.CASCADE) 
-    language = models.ForeignKey(language, related_name='stack_ques_lang', on_delete=models.CASCADE)
+    language = models.ForeignKey(language, related_name='stack_ques_lang', on_delete=models.CASCADE, null=True)
     created_on = models.DateTimeField(default=now)
     updated_on = models.DateTimeField(default=now)
 
@@ -114,6 +114,9 @@ class stack_ques(models.Model):
         return str(self.id)
 
 
+
+class upload(models.Model):
+    upload = models.FileField(upload_to='uploads/')
 
 
 

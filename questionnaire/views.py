@@ -1,12 +1,21 @@
 from rest_framework import generics, views
-from .serializers import cates_serializer, question_serializer, cates_mapp_serializer, ques_map_serializer, related_question, stack_question_serializer # framework_serializer, category_serializer, question_serializer, sub_category_serializer, mappling_Serializer
+from .serializers import cates_serializer, question_serializer, cates_mapp_serializer, ques_map_serializer, related_question, stack_question_serializer, Upload_class # framework_serializer, category_serializer, question_serializer, sub_category_serializer, mappling_Serializer
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response 
 from rest_framework import serializers, status, mixins, viewsets
-from .models import cates, question_model, cates_mapping, ques_cat_mapping, stack_ques   # framework, category, , sub_category, ques_cat_mapping
+from .models import cates, question_model, cates_mapping, ques_cat_mapping, stack_ques, upload   # framework, category, , sub_category, ques_cat_mapping
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime
 from django.shortcuts import get_object_or_404
+import os
+import re
+import pandas as pd
+from pandas import Series
+from django.core.files.storage import FileSystemStorage
+
+
+excel_pattern = re.compile(r'^.*\.xl(sx|s|tx|t|sm)$',re.IGNORECASE)
+email_regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
 
 
 class cates_view (viewsets.ModelViewSet):    # view to add framework, category, subcategory
@@ -228,7 +237,7 @@ class map_existing_ques(mixins.CreateModelMixin,   # map existing question to su
 
 
 
-class map_new_ques(mixins.CreateModelMixin,   # map existing question to sub category    # ?frame=hello&cat=hello2&sub_cat=20
+class map_new_ques(mixins.CreateModelMixin,   # map new question to sub category    # ?frame=hello&cat=hello2&sub_cat=20
                     viewsets.GenericViewSet):
 
     serializer_class = question_serializer
@@ -298,6 +307,230 @@ class map_new_ques(mixins.CreateModelMixin,   # map existing question to sub cat
         mapping = ques_cat_mapping.objects.create(ques_map=ques_id, cate=mapp, language=ques_id.language)
         print(mapping)
         return Response({"Ok"}, status=status.HTTP_201_CREATED)
+
+
+
+
+
+
+
+class Excel_upload_question(
+                                mixins.CreateModelMixin,
+                                mixins.ListModelMixin,
+                                viewsets.GenericViewSet):
+    
+    serializer_class = Upload_class
+    queryset = upload.objects.all()
+    # permission_classes = [IsAuthenticated, Is_admin]
+    
+
+
+
+    # def generate_random_password(self):
+        
+    #     N = 8
+  
+    #     res = ''.join(secrets.choice(string.ascii_uppercase + string.digits) 
+    #                                                       for i in range(N)) 
+
+    #     print("The generated random string : " + str(res)) 
+
+    #     return res
+
+
+
+    # def change_pass_send_email(self, user_obj_list):
+
+    #     # partial = kwargs.pop('partial', False)
+    #     # instance = self.get_object()
+    #     email_default = []
+    #     for obj_user in user_obj_list:
+
+    #         # user_mod = get_user_model()
+    #         # if user_mod.objects.filter(Reg_id = instance).exists():
+    #         # obj_user = user_mod.objects.get(Reg_id = instance)
+    #         print(obj_user.Reg_id)
+    #         print(obj_user.Email)
+    #         password = self.generate_random_password()
+    #         obj_user.set_password(password)
+    #         obj_user.f_login = True
+    #         if obj_user.Email is None:
+    #             email_default.append(obj_user.Reg_id)
+    #             continue
+    #         message = "Your username is " + str(obj_user.Reg_id) + " And your Login 1st time password is " + str(password)
+    #         send_mail('Your Account Has Been Created',
+    #                      message , 'piet.epass@gmail.com', [obj_user.Email])
+
+    #         obj_user.save()
+    #         print("Mail Sent")
+    #     return email_default
+    #     # else:
+    #     #     return Response("User Not Exist", status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+    def create(self, request, *args, **kwargs):
+        print("Request data")
+        print(request.data)
+        serializer = self.get_serializer(data=request.data, many=False)
+
+        if serializer.is_valid(raise_exception=True) :
+            
+            file_name = request.data['upload']
+            serializer.save()
+            print("Serializersssssssss data")
+            print(serializer.data)
+            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) #.split('question')[0]
+            print(BASE_DIR)
+            address = os.path.join(BASE_DIR, 'media\\uploads', str(file_name))
+            g = upload.objects.all()
+            
+            # check the type of file
+                
+            if excel_pattern.match(str(file_name)) :
+                    data = pd.read_excel(address)
+                    
+                # try :
+
+                    for i in range(data['framework'].size):
+                        print(data.loc[i, 'framework'])
+                        if (cates.objects.filter(type='framework').filter(name__iexact=data.loc[i, 'framework'])).exists():
+                            print("framework exists")
+                            framework_obj = cates.objects.filter(type='framework').filter(name__iexact=data.loc[i, 'framework'])
+                            print(framework_obj)
+                            framework_obj = framework_obj[0]
+                        else:
+                           framework_obj = cates.objects.create(name__iexact=data.loc[i, 'framework'], type='framework')
+                        print(framework_obj)
+                        if cates.objects.filter(type='category').filter(name__iexact=data.loc[i, 'category']).exists():
+                            print("category exists")
+                            category_obj = cates.objects.filter(type='category').filter(name__iexact=data.loc[i, 'category'])
+                            category_obj = category_obj[0]
+                        else:
+                           category_obj = cates.objects.create(type='category', name=data.loc[i, 'category'])
+                        print("category")
+                        print(category_obj)
+
+                        if cates.objects.filter(type='sub_category').filter(name__iexact=data.loc[i, 'sub_category']).exists():
+                            print("sub_category exists")
+                            sub_category_obj = cates.objects.filter(type='sub_category').filter(name__iexact=data.loc[i, 'sub_category'])
+                            sub_category_obj = sub_category_obj[0]
+                        else:
+                           sub_category_obj = cates.objects.create(type='sub_category', name=data.loc[i, 'sub_category'])
+                        print("sub_cat")
+                        print(sub_category_obj)
+                        if (cates_mapping.objects.filter(framework=framework_obj).filter(category=category_obj).filter(sub_category=sub_category_obj)).exists():
+                            cates_mapping_obj = cates_mapping.objects.filter(framework=framework_obj).filter(category=category_obj).filter(sub_category=sub_category_obj)
+                            cates_mapping_obj = cates_mapping_obj[0]
+                        else:
+                            cates_mapping_obj = cates_mapping.objects.create(framework=framework_obj, category=category_obj, sub_category=sub_category_obj)
+                        print(cates_mapping_obj)
+
+                        if question_model.objects.filter(question__iexact=data.loc[i, 'question']).exists():
+                            ques_obj = question_model.objects.filter(question__iexact=data.loc[i, 'question'])
+                            print("question exist")
+                            print(ques_obj)
+                            ques_obj = ques_obj[0]
+                        else:
+                            ques_obj = question_model.objects.create(question = data.loc[i, 'question'] , description = data.loc[i, 'description'] ,unit = data.loc[i, 'unit'])
+                        print(ques_obj)
+                        if ques_cat_mapping.objects.filter(ques_map=ques_obj).filter(cate=cates_mapping_obj).exists():
+                            print("This mapping and question already exist")
+                            print(i)
+                        else:
+                            mapping_obj = ques_cat_mapping.objects.create(ques_map=ques_obj, cate=cates_mapping_obj )
+
+                    # deleting upload file
+                    os.remove(address)
+                    g.delete()
+                    # email_default_user = self.change_pass_send_email(success_list_obj)
+                    return Response({"OK"},status=status.HTTP_200_OK)
+
+                # except :
+                #     os.remove(address)
+                #     g.delete()
+                #     return Response("Attributes name should be like : Roll_no",status=status.HTTP_400_BAD_REQUEST)
+                    
+            else :
+                # deleting upload file
+                os.remove(address)
+                g.delete()
+                return Response("unsupported format only excel file is accepted.",status=status.HTTP_400_BAD_REQUEST)
+
+        else :    
+            return Response("not Valid data",status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

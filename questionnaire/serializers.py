@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
-from .models import cates, question_model, cates_mapping, ques_cat_mapping, stack_ques   # framework, category, question_model, sub_category, ques_cat_mapping
+from .models import cates, question_model, cates_mapping, ques_cat_mapping, stack_ques, upload   # framework, category, question_model, sub_category, ques_cat_mapping
 import re 
 from django.utils import timezone
 
@@ -401,7 +401,12 @@ class stack_question_serializer(serializers.ModelSerializer): # question model s
 
 
 
-
+class Upload_class(serializers.ModelSerializer):
+    class Meta:
+        model = upload
+        fields = [
+            'upload'
+        ]
 
 
 
