@@ -324,6 +324,52 @@ class Excel_upload_question(
     # permission_classes = [IsAuthenticated, Is_admin]
     
 
+
+
+    # def generate_random_password(self):
+        
+    #     N = 8
+  
+    #     res = ''.join(secrets.choice(string.ascii_uppercase + string.digits) 
+    #                                                       for i in range(N)) 
+
+    #     print("The generated random string : " + str(res)) 
+
+    #     return res
+
+
+
+    # def change_pass_send_email(self, user_obj_list):
+
+    #     # partial = kwargs.pop('partial', False)
+    #     # instance = self.get_object()
+    #     email_default = []
+    #     for obj_user in user_obj_list:
+
+    #         # user_mod = get_user_model()
+    #         # if user_mod.objects.filter(Reg_id = instance).exists():
+    #         # obj_user = user_mod.objects.get(Reg_id = instance)
+    #         print(obj_user.Reg_id)
+    #         print(obj_user.Email)
+    #         password = self.generate_random_password()
+    #         obj_user.set_password(password)
+    #         obj_user.f_login = True
+    #         if obj_user.Email is None:
+    #             email_default.append(obj_user.Reg_id)
+    #             continue
+    #         message = "Your username is " + str(obj_user.Reg_id) + " And your Login 1st time password is " + str(password)
+    #         send_mail('Your Account Has Been Created',
+    #                      message , 'piet.epass@gmail.com', [obj_user.Email])
+
+    #         obj_user.save()
+    #         print("Mail Sent")
+    #     return email_default
+    #     # else:
+    #     #     return Response("User Not Exist", status=status.HTTP_404_NOT_FOUND)
+
+
+
+
     def create(self, request, *args, **kwargs):
         print("Request data")
         print(request.data)
@@ -349,13 +395,14 @@ class Excel_upload_question(
 
                     for i in range(data['framework'].size):
                         print(data.loc[i, 'framework'])
+                        print("hello")
                         if (cates.objects.filter(type='framework').filter(name__iexact=data.loc[i, 'framework'])).exists():
                             print("framework exists")
                             framework_obj = cates.objects.filter(type='framework').filter(name__iexact=data.loc[i, 'framework'])
                             print(framework_obj)
                             framework_obj = framework_obj[0]
                         else:
-                           framework_obj = cates.objects.create(name__iexact=data.loc[i, 'framework'], type='framework')
+                           framework_obj = cates.objects.create(name=data.loc[i, 'framework'], type='framework')
                         print(framework_obj)
                         if cates.objects.filter(type='category').filter(name__iexact=data.loc[i, 'category']).exists():
                             print("category exists")
@@ -398,12 +445,13 @@ class Excel_upload_question(
                     # deleting upload file
                     os.remove(address)
                     g.delete()
+                    # email_default_user = self.change_pass_send_email(success_list_obj)
                     return Response({"OK"},status=status.HTTP_200_OK)
 
                 # except :
                 #     os.remove(address)
                 #     g.delete()
-                #     return Response("Invalid fields",status=status.HTTP_400_BAD_REQUEST)
+                #     return Response("Attributes name should be like : Roll_no",status=status.HTTP_400_BAD_REQUEST)
                     
             else :
                 # deleting upload file
